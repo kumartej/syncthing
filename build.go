@@ -23,6 +23,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -66,6 +67,7 @@ var targets = map[string]target{
 	"all": {
 		// Only valid for the "build" and "install" commands as it lacks all
 		// the archive creation stuff.
+		name:     "all",
 		buildPkg: "./cmd/...",
 		tags:     []string{"purego"},
 	},
@@ -461,6 +463,15 @@ func build(target target, tags []string) {
 }
 
 func buildTar(target target) {
+	if target.name == "all" {
+		target = targets["syncthing"]
+		for _, file := range listFiles("bin") {
+			if path.Base(file) != target.BinaryName() {
+				target.archiveFiles = append(target.archiveFiles, archiveFile{src: file, dst: file, perm: 0755})
+			}
+		}
+	}
+
 	name := archiveName(target)
 	filename := name + ".tar.gz"
 
@@ -487,6 +498,15 @@ func buildTar(target target) {
 }
 
 func buildZip(target target) {
+	if target.name == "all" {
+		target = targets["syncthing"]
+		for _, file := range listFiles("bin") {
+			if path.Base(file) != target.BinaryName() {
+				target.archiveFiles = append(target.archiveFiles, archiveFile{src: file, dst: file, perm: 0755})
+			}
+		}
+	}
+
 	name := archiveName(target)
 	filename := name + ".zip"
 
