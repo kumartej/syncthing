@@ -65,8 +65,7 @@ type archiveFile struct {
 
 var targets = map[string]target{
 	"all": {
-		// Only valid for the "build" and "install" commands as it lacks all
-		// the archive creation stuff.
+		// Only valid for the "build", "install", "tar" and "zip" commands
 		name:     "all",
 		buildPkg: "./cmd/...",
 		tags:     []string{"purego"},
