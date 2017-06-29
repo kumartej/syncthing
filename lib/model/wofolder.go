@@ -115,13 +115,13 @@ func (f *receiveOnlyFolder) PullFile(files []protocol.FileInfo) {
 		switch {
 		case fi.IsDirectory() && !fi.IsSymlink():
 			l.Debugln("It is a directory local change")
-			f.handleDir2(fi)
+			f.handleDirReceiveOnly(fi)
 		case fi.IsSymlink():
 			l.Debugln("It is a sym link local change")
-			f.handleSymlink2(fi)
+			f.handleSymlinkReceiveOnly(fi)
 		default:
 			l.Debugln("It is a file local change")
-			f.handleFile2(fi, copyChan, finisherChan)
+			f.handleFileReceiveOnly(fi, copyChan, finisherChan)
 		}
 	}
 
@@ -145,7 +145,7 @@ func (f *receiveOnlyFolder) PullFile(files []protocol.FileInfo) {
 	return
 }
 
-func (f *receiveOnlyFolder) handleFile2(curFile protocol.FileInfo, copyChan chan<- copyBlocksState, finisherChan chan<- *sharedPullerState) {
+func (f *receiveOnlyFolder) handleFileReceiveOnly(curFile protocol.FileInfo, copyChan chan<- copyBlocksState, finisherChan chan<- *sharedPullerState) {
 	file, hasCurFile := f.model.CurrentFolderFile(f.folderID, curFile.Name)
 
 	if !hasCurFile {
@@ -322,8 +322,7 @@ func (f *receiveOnlyFolder) handleFile2(curFile protocol.FileInfo, copyChan chan
 	l.Debugln("let's see what's happening:1::", cs)
 }
 
-// handleDir creates or updates the given directory
-func (f *receiveOnlyFolder) handleDir2(file protocol.FileInfo) {
+func (f *receiveOnlyFolder) handleDirReceiveOnly(file protocol.FileInfo) {
 	// Used in the defer closure below, updated by the function body. Take
 	// care not declare another err.
 	var err error
@@ -426,8 +425,7 @@ func (f *receiveOnlyFolder) handleDir2(file protocol.FileInfo) {
 	}
 }
 
-// handleSymlink creates or updates the given symlink
-func (f *receiveOnlyFolder) handleSymlink2(file protocol.FileInfo) {
+func (f *receiveOnlyFolder) handleSymlinkReceiveOnly(file protocol.FileInfo) {
 	// Used in the defer closure below, updated by the function body. Take
 	// care not declare another err.
 	var err error
@@ -497,8 +495,7 @@ func (f *receiveOnlyFolder) handleSymlink2(file protocol.FileInfo) {
 	}
 }
 
-// deleteFile attempts to delete the given file
-func (f *receiveOnlyFolder) deleteFile2(file protocol.FileInfo) {
+func (f *receiveOnlyFolder) deleteFileReceiveOnly(file protocol.FileInfo) {
 	// Used in the defer closure below, updated by the function body. Take
 	// care not declare another err.
 	var err error
@@ -533,7 +530,7 @@ func (f *receiveOnlyFolder) deleteFile2(file protocol.FileInfo) {
 }
 
 // deleteDir attempts to delete the given directory
-func (f *receiveOnlyFolder) deleteDir2(file protocol.FileInfo, matcher *ignore.Matcher) {
+func (f *receiveOnlyFolder) deleteDirReceiveOnly(file protocol.FileInfo, matcher *ignore.Matcher) {
 	// Used in the defer closure below, updated by the function body. Take
 	// care not declare another err.
 	var err error
@@ -594,9 +591,9 @@ func (f *receiveOnlyFolder) deletions(files []protocol.FileInfo) {
 		fi.Deleted = true
 		switch {
 		case fi.IsDirectory() && !fi.IsSymlink():
-			f.deleteDir2(fi, nil)
+			f.deleteDirReceiveOnly(fi, nil)
 		default:
-			f.deleteFile2(fi)
+			f.deleteFileReceiveOnly(fi)
 		}
 	}
 

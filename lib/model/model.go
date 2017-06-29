@@ -1842,10 +1842,11 @@ func (m *Model) internalScanFolderSubdirs(ctx context.Context, folder string, su
 				l.Infof("Stopping folder %s mid-scan due to folder error: %s", folderCfg.Description(), err)
 				return err
 			}
-			m.updateLocalsFromScanning(folder, batch)
 			if folderCfg.IsReceiveOnlyFolder() {
 				runner.PullFile(globalPulls)
 				runner.deletions(deletionsBatch)
+			} else {
+				m.updateLocalsFromScanning(folder, batch)
 			}
 
 			batch = batch[:0]
@@ -1869,10 +1870,11 @@ func (m *Model) internalScanFolderSubdirs(ctx context.Context, folder string, su
 		l.Infof("Stopping folder %s mid-scan due to folder error: %s", folderCfg.Description(), err)
 		return err
 	} else if len(batch) > 0 {
-		m.updateLocalsFromScanning(folder, batch)
 		if folderCfg.IsReceiveOnlyFolder() {
 			runner.PullFile(globalPulls)
 			runner.deletions(deletionsBatch)
+		} else {
+			m.updateLocalsFromScanning(folder, batch)
 		}
 	}
 
