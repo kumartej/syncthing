@@ -668,6 +668,7 @@ angular.module('syncthing.core')
         };
 
         $scope.folderStatus = function (folderCfg) {
+
             if (typeof $scope.model[folderCfg.id] === 'undefined') {
                 return 'unknown';
             }
@@ -1692,6 +1693,15 @@ angular.module('syncthing.core')
 
         $scope.override = function (folder) {
             $http.post(urlbase + "/db/override?folder=" + encodeURIComponent(folder));
+        };
+
+        $scope.overwrite = function (folder) {
+		console.log("In OverWrite: ", folder);
+            $http.post(urlbase + "/db/overwrite?folder=" + encodeURIComponent(folder)).success(function(res){
+		console.log('success: '+res);
+	}).error(function(res){
+		console.log('error: '+res);
+	});
         };
 
         $scope.advanced = function () {

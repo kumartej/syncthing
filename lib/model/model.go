@@ -312,6 +312,8 @@ func (m *Model) addFolderLocked(cfg config.FolderConfiguration) {
 	m.folderCfgs[cfg.ID] = cfg
 	m.folderFiles[cfg.ID] = db.NewFileSet(cfg.ID, m.db)
 
+	l.Debugln("FolderConfiguration in addFolder: ", cfg.Label, cfg.Type, cfg.OverWrite)
+
 	for _, device := range cfg.Devices {
 		m.folderDevices.set(device.DeviceID, cfg.ID)
 		m.deviceFolders[device.DeviceID] = append(m.deviceFolders[device.DeviceID], cfg.ID)
@@ -1759,6 +1761,7 @@ func (m *Model) internalScanFolderSubdirs(ctx context.Context, folder string, su
 	m.fmut.Unlock()
 	mtimefs := fs.MtimeFS()
 
+	l.Debugln("Internalfolder Function: %s", folderCfg.Type, folderCfg.OverWrite == 0)
 	// Check if the ignore patterns changed as part of scanning this folder.
 	// If they did we should schedule a pull of the folder so that we
 	// request things we might have suddenly become unignored and so on.
@@ -1842,7 +1845,8 @@ func (m *Model) internalScanFolderSubdirs(ctx context.Context, folder string, su
 				l.Infof("Stopping folder %s mid-scan due to folder error: %s", folderCfg.Description(), err)
 				return err
 			}
-			if folderCfg.IsReceiveOnlyFolder() {
+			if folderCfg.DoOverWrite() {
+				l.Debugln("Called OverWrite Function: %s 2", folder)
 				runner.PullFile(globalPulls)
 				runner.deletions(deletionsBatch)
 			} else {
@@ -1854,6 +1858,10 @@ func (m *Model) internalScanFolderSubdirs(ctx context.Context, folder string, su
 
 			globalPulls = globalPulls[:0]
 			deletionsBatch = deletionsBatch[:0]
+		}
+		if folderCfg.DoOverWrite() {
+			l.Debugln("Called OverWrite Function: %s 2", folder)
+			f.Invalid = false
 		}
 		batch = append(batch, f)
 
@@ -1870,7 +1878,8 @@ func (m *Model) internalScanFolderSubdirs(ctx context.Context, folder string, su
 		l.Infof("Stopping folder %s mid-scan due to folder error: %s", folderCfg.Description(), err)
 		return err
 	} else if len(batch) > 0 {
-		if folderCfg.IsReceiveOnlyFolder() {
+		if folderCfg.DoOverWrite() {
+			l.Debugln("Called OverWrite Function: %s 2", folder)
 			runner.PullFile(globalPulls)
 			runner.deletions(deletionsBatch)
 		} else {
@@ -1903,7 +1912,8 @@ func (m *Model) internalScanFolderSubdirs(ctx context.Context, folder string, su
 				}
 
 				m.updateLocalsFromScanning(folder, batch)
-				if folderCfg.IsReceiveOnlyFolder() {
+				if folderCfg.DoOverWrite() {
+					l.Debugln("Called OverWrite Function: %s 2", folder)
 					runner.PullFile(batch)
 				}
 				batch = batch[:0]
@@ -1952,6 +1962,8 @@ func (m *Model) internalScanFolderSubdirs(ctx context.Context, folder string, su
 					}
 					if !folderCfg.IsReceiveOnlyFolder() {
 						nf.Version = nf.Version.Update(m.shortID)
+					} else if !folderCfg.DoOverWrite() {
+						nf.Invalid = true
 					}
 
 					batch = append(batch, nf)
@@ -1972,14 +1984,30 @@ func (m *Model) internalScanFolderSubdirs(ctx context.Context, folder string, su
 		return err
 	} else if len(batch) > 0 {
 		m.updateLocalsFromScanning(folder, batch)
-		if folderCfg.IsReceiveOnlyFolder() {
+		if folderCfg.DoOverWrite() {
+			l.Debugln("Called OverWrite Function: %s 2", folder)
 			runner.PullFile(batch)
 		}
 	}
 
+	if folderCfg.OverWrite == 2 {
+		folderCfg.OverWrite = 0
+	}
 	m.folderStatRef(folder).ScanCompleted()
 	runner.setState(FolderIdle)
 	return nil
+}
+
+func (m *Model) OverWrite(folder string) {
+	m.fmut.Lock()
+	folderCfg := m.folderCfgs[folder]
+	m.fmut.Unlock()
+	l.Debugln("Called OverWrite Function: %s", folderCfg.Type, folderCfg.OverWrite == 0)
+	if folderCfg.IsReceiveOnlyFolder() && folderCfg.OverWrite == 0 {
+		l.Debugln("Called OverWrite Function: %s 1", folder)
+		folderCfg.OverWrite = 2
+	}
+	m.ScanFolderSubdirs(folder, nil)
 }
 
 func (m *Model) DelayScan(folder string, next time.Duration) {
@@ -2098,7 +2126,9 @@ func (m *Model) Override(folder string) {
 	m.fmut.RLock()
 	fs, ok := m.folderFiles[folder]
 	runner := m.folderRunners[folder]
+	folderCfg := m.folderCfgs[folder]
 	m.fmut.RUnlock()
+	l.Debugln("Called Override Function: %s", folderCfg.Type, folderCfg.OverWrite == 0)
 	if !ok {
 		return
 	}

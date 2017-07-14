@@ -333,6 +333,8 @@ func (w *walker) walkRegular(ctx context.Context, relPath string, info fs.FileIn
 
 	if !w.checkReceiveOnlyFolder() {
 		f.Version = f.Version.Update(w.ShortID)
+	} else {
+		f.Invalid = true
 	}
 	l.Debugln("to hash:", relPath, f)
 
@@ -372,6 +374,8 @@ func (w *walker) walkDir(ctx context.Context, relPath string, info fs.FileInfo, 
 
 	if !w.checkReceiveOnlyFolder() {
 		f.Version = f.Version.Update(w.ShortID)
+	} else {
+		f.Invalid = true
 	}
 	l.Debugln("dir:", relPath, f)
 
@@ -426,6 +430,8 @@ func (w *walker) walkSymlink(ctx context.Context, absPath, relPath string, dchan
 
 	if !w.checkReceiveOnlyFolder() {
 		f.Version = f.Version.Update(w.ShortID)
+	} else {
+		f.Invalid = true
 	}
 	l.Debugln("symlink changedb:", absPath, f)
 

@@ -146,7 +146,7 @@ func (f *receiveOnlyFolder) PullFile(files []protocol.FileInfo) {
 }
 
 func (f *receiveOnlyFolder) handleFileReceiveOnly(curFile protocol.FileInfo, copyChan chan<- copyBlocksState, finisherChan chan<- *sharedPullerState) {
-	file, hasCurFile := f.model.CurrentFolderFile(f.folderID, curFile.Name)
+	file, hasCurFile := f.model.CurrentGlobalFile(f.folderID, curFile.Name)
 
 	if !hasCurFile {
 		l.Debugln(file, " has been created, has to be deleted")
@@ -354,7 +354,7 @@ func (f *receiveOnlyFolder) handleDirReceiveOnly(file protocol.FileInfo) {
 		mode = 0777
 	}
 
-	file, _ = f.model.CurrentFolderFile(f.folderID, file.Name)
+	file, _ = f.model.CurrentGlobalFile(f.folderID, file.Name)
 
 	if shouldDebug() {
 		curFile, _ := f.model.CurrentFolderFile(f.folderID, file.Name)
@@ -453,7 +453,7 @@ func (f *receiveOnlyFolder) handleSymlinkReceiveOnly(file protocol.FileInfo) {
 		return
 	}
 
-	file, _ = f.model.CurrentFolderFile(f.folderID, file.Name)
+	file, _ = f.model.CurrentGlobalFile(f.folderID, file.Name)
 
 	if shouldDebug() {
 		curFile, _ := f.model.CurrentFolderFile(f.folderID, file.Name)

@@ -22,6 +22,7 @@ type FolderConfiguration struct {
 	Label                 string                      `xml:"label,attr" json:"label"`
 	RawPath               string                      `xml:"path,attr" json:"path"`
 	Type                  FolderType                  `xml:"type,attr" json:"type"`
+	OverWrite             int                         `xml:"overwrite,attr" json:"overwrite"`
 	Devices               []FolderDeviceConfiguration `xml:"device" json:"devices"`
 	RescanIntervalS       int                         `xml:"rescanIntervalS,attr" json:"rescanIntervalS"`
 	IgnorePerms           bool                        `xml:"ignorePerms,attr" json:"ignorePerms"`
@@ -212,6 +213,10 @@ func (f *FolderConfiguration) cleanedPath() string {
 
 func (f *FolderConfiguration) IsReceiveOnlyFolder() bool {
 	return f.Type.IsReceiveOnlyFolder()
+}
+
+func (f *FolderConfiguration) DoOverWrite() bool {
+	return f.Type.IsReceiveOnlyFolder() && !(f.OverWrite == 0)
 }
 
 type FolderDeviceConfigurationList []FolderDeviceConfiguration

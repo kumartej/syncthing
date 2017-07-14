@@ -421,6 +421,9 @@
                 <button type="button" class="btn btn-sm btn-danger pull-left" ng-click="override(folder.id)" ng-if="folderStatus(folder) == 'outofsync' && folder.type == 'readonly'">
                   <span class="fa fa-arrow-circle-up"></span>&nbsp;<span translate>Override Changes</span>
                 </button>
+                <button type="button" class="btn btn-sm btn-danger pull-left" ng-click="overwrite(folder.id)" ng-if="folderStatus(folder) == 'outofsync' && folder.type == 'writeonly'">
+                  <span class="fa fa-arrow-circle-up"></span>&nbsp;<span translate>OverWrite Changes</span>
+                </button>
                 <span class="pull-right">
                   <button ng-if="!folder.paused" type="button" class="btn btn-sm btn-default" ng-click="setFolderPause(folder.id, true)">
                     <span class="fa fa-pause"></span>&nbsp;<span translate>Pause</span>

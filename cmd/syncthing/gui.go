@@ -78,6 +78,7 @@ type modelIntf interface {
 	GlobalDirectoryTree(folder, prefix string, levels int, dirsonly bool) map[string]interface{}
 	Completion(device protocol.DeviceID, folder string) model.FolderCompletion
 	Override(folder string)
+	OverWrite(folder string)
 	NeedFolderFiles(folder string, page, perpage int) ([]db.FileInfoTruncated, []db.FileInfoTruncated, []db.FileInfoTruncated, int)
 	NeedSize(folder string) db.Counts
 	ConnectionStats() map[string]interface{}
@@ -276,6 +277,7 @@ func (s *apiService) Serve() {
 	postRestMux.HandleFunc("/rest/db/prio", s.postDBPrio)                          // folder file [perpage] [page]
 	postRestMux.HandleFunc("/rest/db/ignores", s.postDBIgnores)                    // folder
 	postRestMux.HandleFunc("/rest/db/override", s.postDBOverride)                  // folder
+	postRestMux.HandleFunc("/rest/db/overwrite", s.postDBOverWrite)                // folder
 	postRestMux.HandleFunc("/rest/db/scan", s.postDBScan)                          // folder [sub...] [delay]
 	postRestMux.HandleFunc("/rest/system/config", s.postSystemConfig)              // <body>
 	postRestMux.HandleFunc("/rest/system/error", s.postSystemError)                // <body>
@@ -688,6 +690,13 @@ func (s *apiService) postDBOverride(w http.ResponseWriter, r *http.Request) {
 	var qs = r.URL.Query()
 	var folder = qs.Get("folder")
 	go s.model.Override(folder)
+}
+
+func (s *apiService) postDBOverWrite(w http.ResponseWriter, r *http.Request) {
+	var qs = r.URL.Query()
+	var folder = qs.Get("folder")
+	l.Debugln("In postDBOverWrite", folder)
+	go s.model.OverWrite(folder)
 }
 
 func (s *apiService) getDBNeed(w http.ResponseWriter, r *http.Request) {
